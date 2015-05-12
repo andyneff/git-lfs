@@ -63,4 +63,7 @@ func TestHappyPath(t *testing.T) {
 		"ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb", 1,
 		"master", "a.dat",
 	)
+
+	// I want to see the full test output
+	AssertString(t, "a", "b")
 }
