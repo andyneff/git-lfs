@@ -46,8 +46,10 @@ func TestHappyPath(t *testing.T) {
 		"ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
 		[]byte("a"))
 
+	cloneCmd := run.CloneTo("clone")
+
 	AssertCommandContains(t,
-		run.CloneTo("clone"),
+		cloneCmd,
 		"Cloning into 'clone'",
 		"Downloading a.dat (1 B)",
 	)
