@@ -47,6 +47,8 @@ func TestHappyPath(t *testing.T) {
 		[]byte("a"))
 
 	cloneCmd := run.CloneTo("clone")
+	t.Log("$ git clone ...")
+	t.Log(cloneCmd)
 
 	AssertCommandContains(t,
 		cloneCmd,
