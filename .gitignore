@@ -8,3 +8,5 @@ servertest
 man/*
 
 *.test
+
+rpm/

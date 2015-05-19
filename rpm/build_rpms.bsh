@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -eu
+
+CURDIR=$(cd dirname ${BASH_SOURCE[0]}; pwd)
+SPEC=${CURDIR}/SPECS/git-lfs.spec
+VERSION=$(\grep "^Version:" ${SPEC} | \grep -o [0-9.]*)
+
+if [ ! -e ${CURDIR}/SOURCES/v${VERSION}.tar.gz ]; then
+  mkdir -p ${CURDIR}/SOURCES
+  pushd  ${CURDIR}/SOURCES
+  wget https://github.com/github/git-lfs/archive/v${VERSION}.tar.gz |
+  curl -L -O https://github.com/github/git-lfs/archive/v${VERSION}.tar.gz
+  popd
+fi
+
+rpmbuild --define "_topdir ${CURDIR}" -bs SPECS/git-lfs.spec
+
+rpmbuild --define "_topdir ${CURDIR}" -bb SPECS/git-lfs.spec --nodeps
