@@ -7,12 +7,15 @@ VERSION=$(\grep "^Version:" ${SPEC} | \grep -o [0-9.]*)
 RPMBUILD=(rpmbuild --define "_topdir ${CURDIR}")
 LOG=${CURDIR}/build.log
 
-yum install -y curl which rpm-build tar >> $LOG
+export PATH=${PATH}:/usr/local/bin
+
+sudo yum install -y curl which rpm-build tar >> $LOG
 
 if [ ! -e ${CURDIR}/SOURCES/v${VERSION}.tar.gz ]; then
+  echo "Downloading git-lfs..."
   mkdir -p ${CURDIR}/SOURCES
   pushd  ${CURDIR}/SOURCES
-  curl -L -O https://github.com/github/git-lfs/archive/v${VERSION}.tar.gz >> $LOG
+  curl -L -O https://github.com/github/git-lfs/archive/v${VERSION}.tar.gz >> $LOG 2>&1
   popd
 fi
 
@@ -33,35 +36,46 @@ fi
 
 if [[ ${RUBY_VERSION[0]} < 2 ]]; then
   if [[ ${VERSION[0]} < 7 ]]; then
-    pushd ${CURDIR}
-      rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
-      curl -L -O http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el5.rf.x86_64.rpm
-      rpm -i rpmforge-release-0.5.3-1.el5.rf.*.rpm
-    popd
+    echo "Downloading ruby..."
+    if ! rpm -q epel-release; then
+      pushd ${CURDIR}
+        sudo rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
+        curl -L -O http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el5.rf.x86_64.rpm >> $LOG 2>&1
+        sudo yum install -y rpmforge-release-0.5.3-1.el5.rf.*.rpm >> $LOG
+      popd
+    fi
 
-    yum install -y make patch libyaml-devel glibc-headers autoconf gcc-c++ glibc-devel readline-devel zlib-devel libffi-devel openssl-devel automake libtool sqlite-devel >> $LOG
+    sudo yum install -y make patch libyaml-devel glibc-headers autoconf gcc-c++ glibc-devel readline-devel zlib-devel libffi-devel openssl-devel automake libtool sqlite-devel >> $LOG
     pushd ${CURDIR}/SOURCES
-    curl -L -O http://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.2.tar.gz
+    curl -L -O http://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.2.tar.gz >> $LOG 2>&1
     popd
-    "${RPMBUILD[@]}" -bb SPECS/ruby.spec
-    yum install -y --nogpgcheck RPMS/x86_64/ruby*.rpm
+    echo "Building ruby..."
+    "${RPMBUILD[@]}" -bb SPECS/ruby.spec >> $LOG
+    echo "Installing ruby..."
+    sudo yum install -y --nogpgcheck RPMS/x86_64/ruby*.rpm >> $LOG
   else
-    yum insall -u ruby
+    sudo yum insall -u ruby
   fi
 fi
 
-pushd SOURCES
-curl -L -O https://rubygems.org/downloads/rdiscount-2.1.8.gem
-curl -L -O https://rubygems.org/downloads/hpricot-0.8.6.gem
-curl -L -O https://rubygems.org/downloads/mustache-1.0.1.gem
-curl -L -O https://rubygems.org/downloads/ronn-0.7.3.gem
-popd
+if ! which ronn; then
+  echo "Downloading some ruby gems..."
+  pushd SOURCES
+    curl -L -O https://rubygems.org/downloads/rdiscount-2.1.8.gem >> $LOG 2>&1
+    curl -L -O https://rubygems.org/downloads/hpricot-0.8.6.gem >> $LOG 2>&1
+    curl -L -O https://rubygems.org/downloads/mustache-1.0.1.gem >> $LOG 2>&1
+    curl -L -O https://rubygems.org/downloads/ronn-0.7.3.gem >> $LOG 2>&1
+  popd
 
-"${RPMBUILD[@]}" -bb SPECS/rubygem-rdiscount.spec
-"${RPMBUILD[@]}" -bb SPECS/rubygem-mustache.spec
-"${RPMBUILD[@]}" -bb SPECS/rubygem-hpricot.spec
-"${RPMBUILD[@]}" -bb SPECS/rubygem-ronn.spec
-yum install -y --nogpgcheck RPMS/noarch/rubygem-*.rpm
+  echo "Building ruby gems..."
+  "${RPMBUILD[@]}" -bb SPECS/rubygem-rdiscount.spec >> $LOG
+  "${RPMBUILD[@]}" -bb SPECS/rubygem-mustache.spec >> $LOG
+  "${RPMBUILD[@]}" -bb SPECS/rubygem-hpricot.spec >> $LOG
+  "${RPMBUILD[@]}" -bb SPECS/rubygem-ronn.spec >> $LOG
+
+  echo "Installing ruby gems..."
+  sudo yum install -y --nogpgcheck RPMS/noarch/rubygem-*.rpm >> $LOG
+fi
 
 #"${RPMBUILD[@]}" -bs SPECS/git-lfs.spec
 #"${RPMBUILD[@]}" -bb SPECS/git-lfs.spec

@@ -18,12 +18,16 @@ BuildArch:      noarch
 a swift, liberal HTML parser with a fantastic library
 
 %prep
+%setup -q -c -T
+gem install -V --local --force --install-dir ./%{gemdir} %{SOURCE0}
+#mv ./%{gemdir}/bin ./usr/local
 
 %build
 
 %install
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
-gem install -V --local --force --install-dir ${RPM_BUILD_DIR}/%{gemdir} %{SOURCE0}
+mkdir -p ${RPM_BUILD_ROOT}
+cp -a ./usr ${RPM_BUILD_ROOT}/usr
 
 %clean
 rm -rf %{buildroot}

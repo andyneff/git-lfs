@@ -12,9 +12,6 @@ URL:		https://rubygems.org/gems/%{gem_name}
 Source0:	https://rubygems.org/downloads/%{gem_name}-%{version}.gem
 BuildRoot:      %(echo %{_topdir}/BUILDROOT/%{gem_name}-%{version})
 BuildRequires:	gem
-BuildRequires:  rubygem-hpricot >= 0.8.2
-BuildRequires:  rubygem-mustache >= 0.7.0
-BuildRequires:  rubygem-rdiscount >= 1.5.8
 Requires:       ruby
 Requires:       rubygem-hpricot >= 0.8.2
 Requires:       rubygem-mustache >= 0.7.0
@@ -25,12 +22,16 @@ BuildArch:      noarch
 Builds Manuals
 
 %prep
+%setup -q -c -T
+gem install -V --local --force --install-dir ./%{gemdir} %{SOURCE0}
+mv ./%{gemdir}/bin ./usr/local
 
 %build
 
 %install
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
-gem install -V --local --force --install-dir ${RPM_BUILD_DIR}/%{gemdir} %{SOURCE0}
+mkdir -p ${RPM_BUILD_ROOT}
+cp -a ./usr ${RPM_BUILD_ROOT}/usr
 
 %clean
 rm -rf %{buildroot}
