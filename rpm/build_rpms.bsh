@@ -1,18 +1,67 @@
 #!/usr/bin/env bash
 set -eu
 
-CURDIR=$(cd dirname ${BASH_SOURCE[0]}; pwd)
+CURDIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 SPEC=${CURDIR}/SPECS/git-lfs.spec
 VERSION=$(\grep "^Version:" ${SPEC} | \grep -o [0-9.]*)
+RPMBUILD=(rpmbuild --define "_topdir ${CURDIR}")
+LOG=${CURDIR}/build.log
+
+yum install -y curl which rpm-build tar >> $LOG
 
 if [ ! -e ${CURDIR}/SOURCES/v${VERSION}.tar.gz ]; then
   mkdir -p ${CURDIR}/SOURCES
   pushd  ${CURDIR}/SOURCES
-  wget https://github.com/github/git-lfs/archive/v${VERSION}.tar.gz |
-  curl -L -O https://github.com/github/git-lfs/archive/v${VERSION}.tar.gz
+  curl -L -O https://github.com/github/git-lfs/archive/v${VERSION}.tar.gz >> $LOG
   popd
 fi
 
-rpmbuild --define "_topdir ${CURDIR}" -bs SPECS/git-lfs.spec
+##if [[ ${VERSION[0]} == 5 ]] && ! which go; then
+##  ${CURDIR}/golang_patch.bsh
+##  "${RPMBUILD[@]}" -bb SPECS/golang.spec
+##  #yum install RPMS/golang.rpm
+##fl
 
-rpmbuild --define "_topdir ${CURDIR}" -bb SPECS/git-lfs.spec --nodeps
+if which ruby > /dev/null 2>&1; then
+  IFS_OLD=${IFS}
+  IFS=.
+  RUBY_VERSION=($(ruby -e "print RUBY_VERSION"))
+  IFS=${IFS_OLD}
+else
+  RUBY_VERSION=(0 0 0)
+fi
+
+if [[ ${RUBY_VERSION[0]} < 2 ]]; then
+  if [[ ${VERSION[0]} < 7 ]]; then
+    pushd ${CURDIR}
+      rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
+      curl -L -O http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el5.rf.x86_64.rpm
+      rpm -i rpmforge-release-0.5.3-1.el5.rf.*.rpm
+    popd
+
+    yum install -y make patch libyaml-devel glibc-headers autoconf gcc-c++ glibc-devel readline-devel zlib-devel libffi-devel openssl-devel automake libtool sqlite-devel >> $LOG
+    pushd ${CURDIR}/SOURCES
+    curl -L -O http://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.2.tar.gz
+    popd
+    "${RPMBUILD[@]}" -bb SPECS/ruby.spec
+    yum install -y --nogpgcheck RPMS/x86_64/ruby*.rpm
+  else
+    yum insall -u ruby
+  fi
+fi
+
+pushd SOURCES
+curl -L -O https://rubygems.org/downloads/rdiscount-2.1.8.gem
+curl -L -O https://rubygems.org/downloads/hpricot-0.8.6.gem
+curl -L -O https://rubygems.org/downloads/mustache-1.0.1.gem
+curl -L -O https://rubygems.org/downloads/ronn-0.7.3.gem
+popd
+
+"${RPMBUILD[@]}" -bb SPECS/rubygem-rdiscount.spec
+"${RPMBUILD[@]}" -bb SPECS/rubygem-mustache.spec
+"${RPMBUILD[@]}" -bb SPECS/rubygem-hpricot.spec
+"${RPMBUILD[@]}" -bb SPECS/rubygem-ronn.spec
+yum install -y --nogpgcheck RPMS/noarch/rubygem-*.rpm
+
+#"${RPMBUILD[@]}" -bs SPECS/git-lfs.spec
+#"${RPMBUILD[@]}" -bb SPECS/git-lfs.spec
