@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -eu
-
+set -vx
 CURDIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 SPEC=${CURDIR}/SPECS/git-lfs.spec
 VERSION=$(\grep "^Version:" ${SPEC} | \grep -Eo [0-9.]+)
@@ -14,13 +14,15 @@ exec 6>&1
 exec 7>&2
 
 exec > $LOG
-exec 2> $LOG
+exec 2>> $LOG
 
 echo "Downloading/checking for some essentials..." >&6
 $YUM install -y curl which rpm-build tar
 
 REDHAT_VERSION=($(head -n 1 /etc/redhat-release | \grep -Eo '[0-9]+'))
 REDHAT_NAME=$(awk '{print $1}' /etc/redhat-release)
+
+mkdir -p ${CURDIR}/{BUILD,BUILDROOT,SOURCES}
 
 if [ ! -e ${CURDIR}/SOURCES/v${VERSION}.tar.gz ]; then
   echo "Downloading git-lfs..." >&6
@@ -33,6 +35,7 @@ fi
 if ! which go; then
   echo "Installing go... one way or another" >&6
   if [[ ${REDHAT_VERSION[0]} == 5 ]]; then
+    $YUM install curl.x86_64 glibc gcc
     ${CURDIR}/golang_patch.bsh
     "${RPMBUILD[@]}" -bb SPECS/golang.spec
     $YUM install -y --nogpgcheck RPMS/golang.rpm

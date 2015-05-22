@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -eu
 
-yum install curl.x86_64 glibc gcc
-
 cd $(dirname ${BASH_SOURCE[0]})/SOURCES
 
 #Get EPEL full list
@@ -16,6 +14,9 @@ sed -ri 's|(^%build)|\1\nsed -i '"'"'s:.*--build-id.*::'"'"' ./src/cmd/go/build.
 sed -ri 's|(^Name:.*)|\1\nGroup: Software|' *.spec
 sed -ri 's|(^Name:.*)|\1\nBuildRoot:      %(echo %{_topdir}/BUILDROOT/%{name}-%{version})|' *.spec
 sed -ri 's|(^%package\s.*)|\1\nGroup: Software|' *.spec
+sed -i 's|%ifarch %{ix86}|%if %_arch == i686|' *.spec
+sed -i 's|%ifarch %{arm}|%if %_arch == armv6l|' *.spec
+sed -i 's|%ifarch|%if %_arch ==|' *.spec
 #The test WILL fail, so make the rpm not fail
 sed -ri 's;(.*run.bash.*);\1|true;' *.spec
 mv *.spec ../SPECS/

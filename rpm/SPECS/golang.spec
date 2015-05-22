@@ -29,13 +29,13 @@
 %global goroot          /usr/lib/%{name}
 %global gopath          %{_datadir}/gocode
 %global go_arches       %{ix86} x86_64 %{arm}
-%ifarch x86_64
+%if %_arch == x86_64
 %global gohostarch  amd64
 %endif
-%ifarch %{ix86}
+%if %_arch == i686
 %global gohostarch  386
 %endif
-%ifarch %{arm}
+%if %_arch == armv6l
 %global gohostarch  arm
 %endif
 
@@ -115,7 +115,7 @@ BuildArch:      noarch
 
 ##
 # This is the only architecture specific binary
-%ifarch %{ix86}
+%if %_arch == i686
 %package        pkg-bin-linux-386
 Group: Software
 Summary:        Golang compiler tool for linux 386
@@ -134,7 +134,7 @@ Requires(postun): %{_sbindir}/update-alternatives
 %{summary}
 %endif
 
-%ifarch x86_64
+%if %_arch == x86_64
 %package        pkg-bin-linux-amd64
 Group: Software
 Summary:        Golang compiler tool for linux amd64
@@ -153,7 +153,7 @@ Requires(postun): %{_sbindir}/update-alternatives
 %{summary}
 %endif
 
-%ifarch %{arm}
+%if %_arch == armv6l
 %package        pkg-bin-linux-arm
 Group: Software
 Summary:        Golang compiler tool for linux arm
@@ -500,7 +500,7 @@ if [ $(go list -json std | grep Stale | wc -l) -gt 2 ] ; then
 fi
 
 
-%ifarch %{ix86}
+%if %_arch == i686
 %post pkg-bin-linux-386
 # since the cgo.a packaged in this rpm will be older than the other archives likely built on the ARM builder,
 touch -r %{goroot}/pkg/linux_386/runtime.a %{goroot}/pkg/linux_386/runtime/cgo.a
@@ -515,7 +515,7 @@ if [ $1 = 0 ]; then
 fi
 %endif
 
-%ifarch x86_64
+%if %_arch == x86_64
 %post pkg-bin-linux-amd64
 # since the cgo.a packaged in this rpm will be older than the other archives likely built on the ARM builder,
 touch -r %{goroot}/pkg/linux_amd64/runtime.a %{goroot}/pkg/linux_amd64/runtime/cgo.a
@@ -530,7 +530,7 @@ if [ $1 = 0 ]; then
 fi
 %endif
 
-%ifarch %{arm}
+%if %_arch == armv6l
 %post pkg-bin-linux-arm
 # since the cgo.a packaged in this rpm will be older than the other archives likely built on the ARM builder,
 touch -r %{goroot}/pkg/linux_arm/runtime.a %{goroot}/pkg/linux_arm/runtime/cgo.a
@@ -585,7 +585,7 @@ fi
 %files -f go-src.list src
 
 
-%ifarch %{ix86}
+%if %_arch == i686
 %files pkg-bin-linux-386
 %{goroot}/bin/linux_386/
 # binary executables
@@ -615,7 +615,7 @@ fi
 %{goroot}/pkg/tool/linux_386/pprof
 %endif
 
-%ifarch x86_64
+%if %_arch == x86_64
 %files pkg-bin-linux-amd64
 %{goroot}/bin/linux_amd64/
 # binary executables
@@ -645,7 +645,7 @@ fi
 %{goroot}/pkg/tool/linux_amd64/pprof
 %endif
 
-%ifarch %{arm}
+%if %_arch == armv6l
 %files pkg-bin-linux-arm
 %{goroot}/bin/linux_arm/
 # binary executables
@@ -677,7 +677,7 @@ fi
 
 %files pkg-linux-386 -f pkg-linux-386.list
 %{goroot}/pkg/linux_386/
-%ifarch %{ix86}
+%if %_arch == i686
 %exclude %{goroot}/pkg/linux_386/runtime/cgo.a
 %endif
 %{goroot}/pkg/tool/linux_386/cgo
@@ -686,7 +686,7 @@ fi
 
 %files pkg-linux-amd64 -f pkg-linux-amd64.list
 %{goroot}/pkg/linux_amd64/
-%ifarch x86_64
+%if %_arch == x86_64
 %exclude %{goroot}/pkg/linux_amd64/runtime/cgo.a
 %endif
 %{goroot}/pkg/tool/linux_amd64/cgo
@@ -695,7 +695,7 @@ fi
 
 %files pkg-linux-arm -f pkg-linux-arm.list
 %{goroot}/pkg/linux_arm/
-%ifarch %{arm}
+%if %_arch == armv6l
 %exclude %{goroot}/pkg/linux_arm/runtime/cgo.a
 %endif
 %{goroot}/pkg/tool/linux_arm/cgo
