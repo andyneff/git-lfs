@@ -40,11 +40,9 @@
 %endif
 
 %global go_api 1.4
-%define x86_64
+
 Name:           golang
-%ifarch x86_64
 BuildRoot:      %(echo %{_topdir}/BUILDROOT/%{name}-%{version})
-%endif
 Group: Software
 Version:        1.4.2
 Release:        2%{?dist}

@@ -8,11 +8,11 @@ License:        MIT
 URL:		https://git-lfs.github.com/
 Source0:	https://github.com/github/git-lfs/archive/v%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires:	ruby>2, golang, tar, which, bison
+BuildRequires:	golang, tar, which, bison, rubygem-ronn
 Requires:	git
 
 #Umm... excuse me what?
-%define debug_package %{nil}
+###define debug_package %{nil}
 #I think this is because go links with --build-id=none for linux
 #Uhhh... HOW DO I FIX THAT? (Short of recompiling go)
 
