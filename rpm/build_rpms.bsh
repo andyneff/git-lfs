@@ -17,7 +17,7 @@ exec > $LOG
 exec 2>> $LOG
 
 echo "Downloading/checking for some essentials..." >&6
-$YUM install -y curl which rpm-build tar
+$YUM install -y curl which rpm-build tar bison
 
 REDHAT_VERSION=($(head -n 1 /etc/redhat-release | \grep -Eo '[0-9]+'))
 REDHAT_NAME=$(awk '{print $1}' /etc/redhat-release)
@@ -38,7 +38,7 @@ if ! which go; then
     $YUM install curl.x86_64 glibc gcc
     ${CURDIR}/golang_patch.bsh
     "${RPMBUILD[@]}" -bb SPECS/golang.spec
-    $YUM install -y --nogpgcheck RPMS/golang.rpm
+    $YUM install -y --nogpgcheck RPMS/noarch/golang-1*.rpm RPMS/noarch/golang-pkg-bin-linux-amd64-1*.rpm RPMS/noarch/golang-src-1*.noarch.rpm RPMS/noarch/golang-pkg-linux-amd64-1*.noarch.rpm
   else
     $YUM install -y epel-release
     $YUM install -y golang
