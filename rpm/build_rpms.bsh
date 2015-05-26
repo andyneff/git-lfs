@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
+
 set -eu
-set -vx
+
 CURDIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 SPEC=${CURDIR}/SPECS/git-lfs.spec
 VERSION=$(\grep "^Version:" ${SPEC} | \grep -Eo [0-9.]+)
 RPMBUILD=(rpmbuild --define "_topdir ${CURDIR}")
 LOG=${CURDIR}/build.log
-#YUM=${YUM:=yum}
-YUM=${YUM:=sudo yum}
+SUDO=${SUDO=sudo}
 export PATH=${PATH}:/usr/local/bin
 
 exec 6>&1
@@ -16,13 +16,15 @@ exec 7>&2
 exec > $LOG
 exec 2>> $LOG
 
+set -vx
+
 echo "Downloading/checking for some essentials..." >&6
-$YUM install -y curl which rpm-build tar bison
+$SUDO yum install -y make curl which rpm-build tar bison
 
 REDHAT_VERSION=($(head -n 1 /etc/redhat-release | \grep -Eo '[0-9]+'))
 REDHAT_NAME=$(awk '{print $1}' /etc/redhat-release)
 
-mkdir -p ${CURDIR}/{BUILD,BUILDROOT,SOURCES}
+mkdir -p ${CURDIR}/{BUILD,BUILDROOT,SOURCES,RPMS,SRPMS}
 
 if [ ! -e ${CURDIR}/SOURCES/v${VERSION}.tar.gz ]; then
   echo "Downloading git-lfs..." >&6
@@ -35,13 +37,13 @@ fi
 if ! which go; then
   echo "Installing go... one way or another" >&6
   if [[ ${REDHAT_VERSION[0]} == 5 ]]; then
-    $YUM install curl.x86_64 glibc gcc
+    $SUDO yum install -y curl.x86_64 glibc gcc
     ${CURDIR}/golang_patch.bsh
     "${RPMBUILD[@]}" -bb SPECS/golang.spec
-    $YUM install -y --nogpgcheck RPMS/noarch/golang-1*.rpm RPMS/noarch/golang-pkg-bin-linux-amd64-1*.rpm RPMS/noarch/golang-src-1*.noarch.rpm RPMS/noarch/golang-pkg-linux-amd64-1*.noarch.rpm
+    $SUDO yum install -y --nogpgcheck RPMS/noarch/golang-1*.rpm RPMS/noarch/golang-pkg-bin-linux-amd64-1*.rpm RPMS/noarch/golang-src-1*.noarch.rpm RPMS/noarch/golang-pkg-linux-amd64-1*.noarch.rpm
   else
-    $YUM install -y epel-release
-    $YUM install -y golang
+    $SUDO yum install -y epel-release
+    $SUDO yum install -y golang
   fi
 fi
 
@@ -61,25 +63,26 @@ if [[ ${RUBY_VERSION[0]} < 2 ]]; then
     if ! rpm -q epel-release; then
       if [[ ${REDHAT_VERSION[0]} == 5 ]]; then
         pushd ${CURDIR}
-          sudo rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
+          $SUDO rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
           curl -L -O http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el5.rf.x86_64.rpm
-          $YUM install -y rpmforge-release-0.5.3-1.el5.rf.*.rpm
+          $SUDO yum install -y rpmforge-release-0.5.3-1.el5.rf.*.rpm
+          rm rpmforge-release-0.5.3-1.el5.rf.*.rpm
         popd
       else
-        $YUM install epel-release #Part of centos 6+
+        $SUDO yum install epel-release #Part of centos 6+
       fi
     fi
 
-    $YUM install -y make patch libyaml-devel glibc-headers autoconf gcc-c++ glibc-devel readline-devel zlib-devel libffi-devel openssl-devel automake libtool sqlite-devel
+    $SUDO yum install -y patch libyaml-devel glibc-headers autoconf gcc-c++ glibc-devel readline-devel zlib-devel libffi-devel openssl-devel automake libtool sqlite-devel
     pushd ${CURDIR}/SOURCES
     curl -L -O http://cache.ruby-lang.org/pub/ruby/2.2/ruby-2.2.2.tar.gz
     popd
     echo "Building ruby..." >&6
     "${RPMBUILD[@]}" -bb SPECS/ruby.spec
     echo "Installing ruby..." >&6
-    $YUM install -y --nogpgcheck RPMS/x86_64/ruby*.rpm
+    $SUDO yum install -y --nogpgcheck RPMS/x86_64/ruby*.rpm
   else
-    $YUM insall -u ruby
+    $SUDO yum install -y ruby ruby-devel
   fi
 fi
 
@@ -99,8 +102,11 @@ if ! which ronn; then
   "${RPMBUILD[@]}" -bb SPECS/rubygem-ronn.spec
 
   echo "Installing ruby gems..." >&6
-  $YUM install -y --nogpgcheck RPMS/noarch/rubygem-*.rpm
+  $SUDO yum install -y --nogpgcheck $(ls RPMS/noarch/rubygem-*.rpm RPMS/x86_64/rubygem-*.rpm | grep -v debuginfo)
 fi
-set -xv
-"${RPMBUILD[@]}" -bs SPECS/git-lfs.spec
+
+echo "Build git-lfs rpm..." >&6
 "${RPMBUILD[@]}" -bb SPECS/git-lfs.spec
+"${RPMBUILD[@]}" -bs SPECS/git-lfs.spec
+
+echo "All Done!" >&6

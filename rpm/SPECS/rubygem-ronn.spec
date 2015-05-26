@@ -1,4 +1,5 @@
-%global gemdir %(ruby -rubygems -e 'puts Gem::dir' 2>/dev/null)
+#global gemdir %(ruby -rubygems -e 'puts Gem::dir' 2>/dev/null)
+%global gemdir %(IFS=: R=($(gem env gempath)); echo ${R[${#R[@]}-1]})
 %define gem_name ronn
 
 Name:           rubygem-%{gem_name}
@@ -38,7 +39,8 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-/
+%{gemdir}
+/usr/local/bin/%{gem_name}
 
 %changelog
 * Wed May 20 2015 Andrew Neff <andyneff@users.noreply.github.com> - 2.1.8

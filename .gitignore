@@ -9,4 +9,5 @@ man/*
 
 *.test
 
-rpm/
+rpm/BUILD*
+rpm/*RPMS

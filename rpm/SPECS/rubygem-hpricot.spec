@@ -1,4 +1,5 @@
-%global gemdir %(ruby -rubygems -e 'puts Gem::dir' 2>/dev/null)
+#global gemdir %(ruby -rubygems -e 'puts Gem::dir' 2>/dev/null)
+%global gemdir %(IFS=: R=($(gem env gempath)); echo ${R[${#R[@]}-1]})
 %define gem_name hpricot
 Name:           rubygem-%{gem_name}
 Version:        0.8.6
@@ -12,7 +13,6 @@ Source0:	https://rubygems.org/downloads/%{gem_name}-%{version}.gem
 BuildRoot:      %(echo %{_topdir}/BUILDROOT/%{gem_name}-%{version})
 BuildRequires:	gem
 Requires:       ruby
-BuildArch:      noarch
 
 %description
 a swift, liberal HTML parser with a fantastic library
@@ -34,7 +34,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-/
+%{gemdir}
 
 %changelog
 * Wed May 20 2015 Andrew Neff <andyneff@users.noreply.github.com> - 2.1.8

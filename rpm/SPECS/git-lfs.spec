@@ -11,10 +11,12 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:	golang, tar, which, bison, rubygem-ronn
 Requires:	git
 
-#Umm... excuse me what?
-###define debug_package %{nil}
-#I think this is because go links with --build-id=none for linux
-#Uhhh... HOW DO I FIX THAT? (Short of recompiling go)
+%if 0%{?rhel} == 7
+  #Umm... excuse me what?
+  %define debug_package %{nil}
+  #I think this is because go links with --build-id=none for linux
+  #Uhhh... HOW DO I FIX THAT? Using an external linker
+%endif
 
 %description
 
@@ -29,7 +31,8 @@ Requires:	git
 %install
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
 install -D bin/git-lfs ${RPM_BUILD_ROOT}/usr/bin/git-lfs
-#install -D man/*.1 {$RPM_BUILD_ROOT}/usr/share/man/man1
+mkdir -p -m 755 ${RPM_BUILD_ROOT}/usr/share/man/man1
+install -D man/*.1 ${RPM_BUILD_ROOT}/usr/share/man/man1
 
 %clean
 rm -rf %{buildroot}
@@ -38,7 +41,7 @@ rm -rf %{buildroot}
 %defattr(-,root,root,-)
 %doc LICENSE README.md
 /usr/bin/git-lfs
-#/usr/share/man/man1/*.1
+/usr/share/man/man1/*.1.gz
 
 %changelog
 * Mon May 18 2015 Andrew Neff <andyneff@users.noreply.github.com> - 0.5.1-1
