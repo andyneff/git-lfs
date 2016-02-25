@@ -28,7 +28,7 @@ mkdir -p src/github.com/github
 ln -s $(pwd) src/github.com/github/%{name}
 
 %build
-%if 0%{?rhel} == 5
+%if 0%{?rhel} < 6
   export CGO_ENABLED=0
 %endif
 %if %{_arch} == i386
@@ -45,6 +45,9 @@ mkdir -p -m 755 ${RPM_BUILD_ROOT}/usr/share/man/man1
 install -D man/*.1 ${RPM_BUILD_ROOT}/usr/share/man/man1
 
 %check
+%if 0%{?rhel} < 6
+  export CGO_ENABLED=0
+%endif
 export GOPATH=`pwd`
 export GIT_LFS_TEST_DIR=$(mktemp -d)
 
