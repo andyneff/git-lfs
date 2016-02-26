@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+set -eu
+
+#Mingw32 auto converts /drive/dir/blah to drive:\dir\blah ... Can't have that.
+if [[ `uname` == MINGW* ]]; then
+  MINGW_PATCH='/'
+else
+  MINGW_PATCH=''
+fi
+
+CUR_DIR=$(cd $(dirname "${BASH_SOURCE[0]}"); pwd)
+REPO_DIR=$(cd ${CUR_DIR}/..; pwd)
+OTHER_OPTIONS=("-it" "--rm")
+
+FINAL_UID=$(id -u)
+FINAL_GID=$(id -g)
+if [[ $FINAL_UID == 0 ]]; then
+  FINAL_UID=${SUDO_UID-}
+fi
+if [[ $FINAL_GID == 0 ]]; then
+  FINAL_GID=${SUDO_GID-}
+fi
+
+docker run "${OTHER_OPTIONS[@]}" ${DOCKER_OTHER_OPTIONS-} \
+           -e FINAL_UID=${FINAL_UID} \
+           -e FINAL_GID=${FINAL_GID} \
+           -v "${MINGW_PATCH}${REPO_DIR}:/go/src/github.com/github/git-lfs" \
+           andyneff/git-lfs_dockers:git-lfs
