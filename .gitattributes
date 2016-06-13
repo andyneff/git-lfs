@@ -1,3 +1,5 @@
 * text=auto
 * eol=lf
 *.bat eol=crlf
+
+config/version.go ident

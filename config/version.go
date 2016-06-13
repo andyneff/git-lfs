@@ -13,11 +13,9 @@ var (
 )
 
 func init() {
-	gitCommit := ""
-	if len(GitCommit) > 0 {
-		gitCommit = "; git " + GitCommit
-	}
-	VersionDesc = fmt.Sprintf("git-lfs/%s (GitHub; %s %s; go %s%s)",
+	gitCommit := strings.Split("$Id$", " ")[1][0:7]
+
+	VersionDesc = fmt.Sprintf("git-lfs/%s (GitHub; %s %s; go %s; git %s)",
 		Version,
 		runtime.GOOS,
 		runtime.GOARCH,

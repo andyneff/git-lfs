@@ -27,7 +27,6 @@ var (
 		"windows": "Windows",
 		"amd64":   "AMD64",
 	}
-	LdFlag string
 )
 
 func mainBuild() {
@@ -43,11 +42,6 @@ func mainBuild() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "go generate failed:\n%v", string(genOut))
 		os.Exit(1)
-	}
-	cmd, _ := exec.Command("git", "rev-parse", "--short", "HEAD").Output()
-
-	if len(cmd) > 0 {
-		LdFlag = strings.TrimSpace("-X github.com/github/git-lfs/config.GitCommit=" + string(cmd))
 	}
 
 	buildMatrix := make(map[string]Release)
@@ -136,9 +130,6 @@ func buildCommand(dir, buildos, buildarch string) error {
 
 	args := make([]string, 1, 6)
 	args[0] = "build"
-	if len(LdFlag) > 0 {
-		args = append(args, "-ldflags", LdFlag)
-	}
 	args = append(args, "-o", bin, ".")
 
 	cmd := exec.Command("go", args...)
