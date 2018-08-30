@@ -30,13 +30,13 @@ $distro_name_map = {
   ),
   "centos/6" => %w(
     el/6
+    sles/11.4
   ),
   "centos/7" => %w(
     el/7
     fedora/27
     fedora/28
     opensuse/42.3
-    sles/11.4
     sles/12.3
   ),
   "debian/7" => %w(
